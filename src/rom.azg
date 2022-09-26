@@ -1,0 +1,26 @@
+@include "hardware.azg"
+
+@segment "ADDR"
+@meta "ID" "HRAM"
+@org HW_MMAP_HRAM
+@include "hram.azg"
+@assert @here <= $FFFF
+
+@segment "CODE"
+@meta "ID" "ROM0", "BANK" "00"
+@org HW_MMAP_ROM0
+
+@include "rom0/interrupts.azg"
+
+@align $0100
+	nop
+	jp Start	
+	HW_ROM_HEADER "Test",
+		HW_ROM_HEADER.CGB_ONLY,
+		HW_ROM_HEADER.MBC5_RAM_BAT,
+		HW_ROM_HEADER.ROM_SIZE_8192KB,
+		HW_ROM_HEADER.SRAM_SIZE_128KB
+
+@include "rom0/start.azg"
+@include "rom0/video.azg"
+@include "rom0/bank_switch.azg"

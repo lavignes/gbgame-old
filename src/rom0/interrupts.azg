@@ -1,0 +1,50 @@
+Rst00:
+	jp Start
+
+@align $0008
+Rst08:
+	ret
+
+@align $0010
+Rst10:
+	ret
+
+@align $0018
+Rst18:
+	ret
+
+@align $0020
+Rst20:
+	ret
+
+@align $0028
+Rst28:
+	ret
+
+@align $0030
+Rst30:
+	ret
+
+@align $0038
+Rst38:
+	ret
+
+@align $0040
+InterruptVBlank:
+	reti
+
+@align $0048
+InterruptLcd:
+	reti
+
+@align $0050
+InterruptTimer:
+	reti
+
+@align $0058
+InterruptSerial:
+	reti
+
+@align $0060
+InterruptJoypad:
+	reti

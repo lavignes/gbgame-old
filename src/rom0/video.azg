@@ -1,0 +1,102 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Copy colors to BG palette
+;
+; args:
+;   a  - dst BG pal index
+;   hl - src color addr
+;   c  - num palettes
+; modifies: a, c, de, hl
+;
+; example:
+;  ld a, <palette index>
+;  lh hl, <color data addr>
+;  ld c, 1
+;  call VideoBGPaletteWrite
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VideoBGPaletteWrite:
+    ; Multiply c and a to byte offsets
+    sla c ; c *= 4
+    sla c
+
+    sla a ; a *= 8
+    sla a
+    sla a
+
+    ; Set BG palette index to a
+    ld de, HW_IO_BGPI
+    set 7, a     ; enable auto-incremting
+    ld (de), a
+
+    ; increment to get BGPD addr
+    inc de ; ld de, BGPD
+.loop:
+    push hl
+    call VideoWaitForVRAM
+    pop hl
+    ld a, (hl+)
+    ld (de), a
+    ld a, (hl+)
+    ld (de), a
+    dec c
+    jr nz, .loop
+
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Copy colors to OBJ palette
+;
+; args:
+;   a  - dst OBJ pal index
+;   hl - src color addr
+;   c  - num palettes
+; modifies: a, bc, de, hl
+;
+; example:
+;  ld a, <palette index>
+;  lh hl, <color data addr>
+;  ld c, 1
+;  call VideoOBJPaletteWrite
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VideoOBJPaletteWrite:
+    ; Multiply c and a to byte offsets
+    sla c ; c *= 4
+    sla c
+
+    sla a ; a *= 8
+    sla a
+    sla a
+
+    ; Set OBJ palette index to a
+    ld de, HW_IO_OBPI
+    set 7, a     ; enable auto-incremting
+    ld (de), a
+
+    ; increment to get OBPD addr
+    inc de ; ld de, OBPD
+.loop:
+    push hl
+    call VideoWaitForVRAM
+    pop hl
+    ld a, (hl+)
+    ld (de), a
+    ld a, (hl+)
+    ld (de), a
+    dec c
+    jr nz, .loop
+
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Wait for VRAM to be accessible
+; this includes the hblank
+;
+; modifies: hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VideoWaitForVRAM:
+    ld hl, HW_IO_STAT
+.wait:
+    bit 1, (hl)
+    jr nz, .wait
+    ret

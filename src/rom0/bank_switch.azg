@@ -1,0 +1,41 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Switch to ROM bank hl
+; pushing current ROM bank on the stack
+;
+; args:
+;   hl - bank to switch to
+; modifies: a, bc, de, hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+BankSwitchROMPush:
+	pop de			; Save return address
+
+	ldh a, (HRAM.ROMBank)	; Push old bank
+	ld c, a
+	ldh a, (HRAM.ROMBank+1)
+	ld b, a
+	push bc
+
+.changeAndSave:
+	ld a, l			; Change Banks
+	ld ($2000), a
+	ld a, h
+	ld ($3000), a
+
+	ldh (HRAM.ROMBank+1), a	; Save current bank
+	ld a, l
+	ldh (HRAM.ROMBank), a
+
+	push de			; Restore return address
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Restore ROM bank on stack
+;
+; returns:
+;   hl - the current ROM bank
+; modifies: a, de, hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+BankSwitchROMPop:
+	pop de			; Save return address
+	pop hl
+	jr BankSwitchROMPush.changeAndSave

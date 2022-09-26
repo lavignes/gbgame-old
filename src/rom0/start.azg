@@ -1,0 +1,61 @@
+@include "color.azg"
+
+EXAMPLE_COLOR:
+	COLOR_DB $FF, $00, $00
+	COLOR_DB $00, $FF, $00
+	COLOR_DB $00, $00, $FF
+	COLOR_DB $FF, $FF, $00
+
+	COLOR_DB $FF, $00, $FF
+	COLOR_DB $00, $FF, $FF
+	COLOR_DB $00, $00, $00
+	COLOR_DB $FF, $FF, $FF
+
+DoubleSpeedMode:
+	ld hl, HW_IO_KEY1
+	bit 7, (hl)		; if already in double speed, then return
+	ret nz
+
+	set 0, (hl)		; enable speed switch mode
+
+	xor a			; clear interrupts
+	ldh (HW_IO_IF), a
+	ldh (HW_IO_IE), a
+
+	; write to joypad and stop to perform the real switch
+	ld a, HW_JOYP_GET_ACTION | HW_JOYP_GET_DIRECTION
+	ldh (HW_IO_JOYP), a
+	stop
+	ret
+
+Start:
+	di
+	ld sp, HW_MMAP_WRAM0_END - 1		; Put stack at end of WRAM0
+	call DoubleSpeedMode
+
+	ld a, 0
+	ld hl, EXAMPLE_COLOR
+	ld c, 2
+	call VideoBGPaletteWrite
+
+	ld a, 2
+	ld hl, EXAMPLE_COLOR
+	ld c, 2
+	call VideoBGPaletteWrite
+
+	ld a, 4
+	ld hl, EXAMPLE_COLOR
+	ld c, 2
+	call VideoBGPaletteWrite
+
+	ld a, 6
+	ld hl, EXAMPLE_COLOR
+	ld c, 2
+	call VideoBGPaletteWrite	
+
+	ld hl, $01FF
+	call BankSwitchROMPush
+
+.loop
+	jr .loop
+
