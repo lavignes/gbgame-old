@@ -9,9 +9,9 @@
 BankSwitchROMPush:
 	pop de			; Save return address
 
-	ldh a, (HRAM.ROMBank)	; Push old bank
+	ldh a, (HRAM.ROMBankLo)	; Push old bank
 	ld c, a
-	ldh a, (HRAM.ROMBank+1)
+	ldh a, (HRAM.ROMBankHi)
 	ld b, a
 	push bc
 
@@ -21,9 +21,9 @@ BankSwitchROMPush:
 	ld a, h
 	ld ($3000), a
 
-	ldh (HRAM.ROMBank+1), a	; Save current bank
+	ldh (HRAM.ROMBankHi), a	; Save current bank
 	ld a, l
-	ldh (HRAM.ROMBank), a
+	ldh (HRAM.ROMBankLo), a
 
 	push de			; Restore return address
 	ret

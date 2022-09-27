@@ -1,2 +1,3 @@
 HRAM:
-.ROMBank: @dw
+.ROMBankLo: @db
+.ROMBankHi: @db

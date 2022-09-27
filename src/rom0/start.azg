@@ -30,9 +30,14 @@ DoubleSpeedMode:
 
 Start:
 	di
-	ld sp, HW_MMAP_WRAM0_END - 1		; Put stack at end of WRAM0
-	call DoubleSpeedMode
+	ld sp, HW_MMAP_WRAM0_END		; Put stack at end of WRAM0
 
+	call DoubleSpeedMode			; Gotta go fast
+	
+	ld hl, $0001				; Ensure ROM bank is 1
+	call BankSwitchROMPush
+	pop hl
+	
 	ld a, 0
 	ld hl, EXAMPLE_COLOR
 	ld c, 2
@@ -52,9 +57,6 @@ Start:
 	ld hl, EXAMPLE_COLOR
 	ld c, 2
 	call VideoBGPaletteWrite	
-
-	ld hl, $01FF
-	call BankSwitchROMPush
 
 .loop
 	jr .loop
