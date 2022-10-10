@@ -16,18 +16,4 @@
 	@endeach
 @endmacro
 
-@macro MEMCPY, 4, Name, Dst, Src, Len
-	ld de, Dst
-	ld hl, Src
-	ld bc, Len
-@label { Name _memcopy }
-	ld a, (hl+)
-	ld (de), a
-	inc de
-	dec bc
-	ld a, b
-	or c
-	jr nz, @label { Name _memcopy }
-@endmacro
-
 @endif ; STDMACROS_INC

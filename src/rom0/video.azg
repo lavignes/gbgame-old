@@ -7,13 +7,6 @@
 ;	c	num palettes
 ;
 ; modifies: a, c, de, hl
-;
-; example:
-;	ld a, <palette index>
-;	lh hl, <color data addr>
-;	ld c, 1
-;	call VideoBGPaletteWrite
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 VideoBGPaletteWrite:
 	; Multiply c and a to byte offsets
@@ -52,13 +45,6 @@ VideoBGPaletteWrite:
 ;	hl	src color addr
 ;	c	num palettes
 ; modifies: a, bc, de, hl
-;
-; example:
-;	ld a, <palette index>
-;	lh hl, <color data addr>
-;	ld c, 1
-;	call VideoOBJPaletteWrite
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 VideoOBJPaletteWrite:
 	; Multiply c and a to byte offsets

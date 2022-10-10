@@ -2,7 +2,6 @@
 ; Call function at a:hl
 ;
 ; modifies: a, de, hl
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 FarCallHL:
 	ldh (HRAM.Scratch+0), a
