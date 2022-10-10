@@ -49,6 +49,7 @@
 @include "rom0/far_call.azg"
 @include "rom0/joy.azg"
 @include "rom0/util.azg"
+@echo @string { "ROM00 size: $" @hex @here " / $4000" }
 @assert @here <= $4000, "ROM00 overflow!"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

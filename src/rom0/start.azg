@@ -25,7 +25,7 @@ RAMInit:
 	; erase wram0
 	ld a, 'i'
 	ld hl, HW_MMAP_WRAM0
-	ld bc, $1000 - $100 ; dont touch stack
+	ld bc, $1000-$100 ; dont touch stack
 	call UtilMemSet
 
 	; erase wram1
@@ -38,8 +38,8 @@ RAMInit:
 
 Start:
 	di
-	; Put stack at end of WRAM0
-	ld sp, HW_MMAP_WRAM0_END-$FF
+	; Put stack top at end of WRAM0
+	ld sp, HW_MMAP_WRAM0_END+1
 	call RAMInit
 	call VideoDisable
 	call DoubleSpeedMode
@@ -63,8 +63,14 @@ Start:
 	jr .sleep
 
 MainLoop:
-	call JoyUpdate
+	; All critical video stuff should happen here
+	; * update OAM
+	; * update tiles
 
+	; Update Sound?
+
+	; Tick game logic / scripts
+	call JoyUpdate
 	ldh a, (HRAM.JoyHeld)
 	ld b, a
 	and 1 << JOY_BIT_LEFT
