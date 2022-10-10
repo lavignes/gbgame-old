@@ -1,63 +1,106 @@
-@include "color.azg"
-
-EXAMPLE_COLOR:
-	COLOR_DB $FF, $00, $00
-	COLOR_DB $00, $FF, $00
-	COLOR_DB $00, $00, $FF
-	COLOR_DB $FF, $FF, $00
-
-	COLOR_DB $FF, $00, $FF
-	COLOR_DB $00, $FF, $FF
-	COLOR_DB $00, $00, $00
-	COLOR_DB $FF, $FF, $FF
-
 DoubleSpeedMode:
+	; Return if already double speed
 	ld hl, HW_IO_KEY1
-	bit 7, (hl)		; if already in double speed, then return
+	bit 7, (hl)
 	ret nz
 
-	set 0, (hl)		; enable speed switch mode
+	set 0, (hl)
 
-	xor a			; clear interrupts
+	xor a
 	ldh (HW_IO_IF), a
 	ldh (HW_IO_IE), a
 
 	; write to joypad and stop to perform the real switch
-	ld a, HW_JOYP_GET_ACTION | HW_JOYP_GET_DIRECTION
-	ldh (HW_IO_JOYP), a
+	ld a, HW_P1_BIT_GET_ACTION | HW_P1_BIT_GET_DIRECTION
+	ldh (HW_IO_P1), a
 	stop
+	ret
+
+RAMInit:
+	xor a
+	ldh (HRAM.JoyPressed), a
+	ldh (HRAM.JoyHeld), a
+	ldh (HRAM.JoyReleased), a
+
+	; erase wram0
+	ld a, 'i'
+	ld hl, HW_MMAP_WRAM0
+	ld bc, $1000 - $100 ; dont touch stack
+	call UtilMemSet
+
+	; erase wram1
+	ld a, 'i'
+	ld hl, HW_MMAP_WRAMX
+	ld bc, $1000
+	call UtilMemSet
+
 	ret
 
 Start:
 	di
-	ld sp, HW_MMAP_WRAM0_END		; Put stack at end of WRAM0
+	; Put stack at end of WRAM0
+	ld sp, HW_MMAP_WRAM0_END-$FF
+	call RAMInit
+	call VideoDisable
+	call DoubleSpeedMode
 
-	call DoubleSpeedMode			; Gotta go fast
-	
-	ld hl, $0001				; Ensure ROM bank is 1
-	call BankSwitchROMPush
-	pop hl
-	
-	ld a, 0
-	ld hl, EXAMPLE_COLOR
-	ld c, 2
-	call VideoBGPaletteWrite
+	ld a, 1
+	rst ROMBankSwitch
 
-	ld a, 2
-	ld hl, EXAMPLE_COLOR
-	ld c, 2
-	call VideoBGPaletteWrite
+	call VideoInit
+	call VideoEnable
 
-	ld a, 4
-	ld hl, EXAMPLE_COLOR
-	ld c, 2
-	call VideoBGPaletteWrite
+	; Enable vblank interrupt
+	ld a, 1 << HW_IF_BIT_VBLANK
+	ldh (HW_IO_IE), a
+	ei
 
-	ld a, 6
-	ld hl, EXAMPLE_COLOR
-	ld c, 2
-	call VideoBGPaletteWrite	
+	; Finally we sleep the main thread, running
+	; everything in vblank
+.sleep
+	halt
+	nop
+	jr .sleep
 
-.loop
-	jr .loop
+MainLoop:
+	call JoyUpdate
+
+	ldh a, (HRAM.JoyHeld)
+	ld b, a
+	and 1 << JOY_BIT_LEFT
+	jr z, .right
+
+	ldh a, (HW_IO_SCX)
+	add a, 2
+	ldh (HW_IO_SCX), a
+
+.right:
+	ld a, b
+	and 1 << JOY_BIT_RIGHT
+	jr z, .up
+
+	ldh a, (HW_IO_SCX)
+	sub 2
+	ldh (HW_IO_SCX), a
+
+.up:
+	ld a, b
+	and 1 << JOY_BIT_UP
+	jr z, .down
+
+	ldh a, (HW_IO_SCY)
+	add a, 2
+	ldh (HW_IO_SCY), a
+
+.down:
+	ld a, b
+	and 1 << JOY_BIT_DOWN
+	jr z, .exit
+
+	ldh a, (HW_IO_SCY)
+	sub 2
+	ldh (HW_IO_SCY), a
+
+.exit:
+	ret
 

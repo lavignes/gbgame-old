@@ -2,16 +2,17 @@
 ; Copy colors to BG palette
 ;
 ; args:
-;   a  - dst BG pal index
-;   hl - src color addr
-;   c  - num palettes
+;	a	dst BG pal index
+;	hl	src color addr
+;	c	num palettes
+;
 ; modifies: a, c, de, hl
 ;
 ; example:
-;  ld a, <palette index>
-;  lh hl, <color data addr>
-;  ld c, 1
-;  call VideoBGPaletteWrite
+;	ld a, <palette index>
+;	lh hl, <color data addr>
+;	ld c, 1
+;	call VideoBGPaletteWrite
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 VideoBGPaletteWrite:
@@ -24,15 +25,15 @@ VideoBGPaletteWrite:
 	sla a
 
 	; Set BG palette index to a
-	ld de, HW_IO_BGPI
-	set 7, a     ; enable auto-incremting
+	ld de, HW_IO_BCPS
+	set 7, a	; enable auto-incremting
 	ld (de), a
 
-	; increment to get BGPD addr
-	inc de ; ld de, BGPD
+	; increment to get BCPD addr
+	inc de	; ld de, BCPD
 .loop:
 	push hl
-	call VideoWaitForVRAM
+	call VideoWaitForVBlankOrHBlank
 	pop hl
 	ld a, (hl+)
 	ld (de), a
@@ -47,16 +48,16 @@ VideoBGPaletteWrite:
 ; Copy colors to OBJ palette
 ;
 ; args:
-;   a  - dst OBJ pal index
-;   hl - src color addr
-;   c  - num palettes
+; 	a	dst OBJ pal index
+;	hl	src color addr
+;	c	num palettes
 ; modifies: a, bc, de, hl
 ;
 ; example:
-;  ld a, <palette index>
-;  lh hl, <color data addr>
-;  ld c, 1
-;  call VideoOBJPaletteWrite
+;	ld a, <palette index>
+;	lh hl, <color data addr>
+;	ld c, 1
+;	call VideoOBJPaletteWrite
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 VideoOBJPaletteWrite:
@@ -69,23 +70,137 @@ VideoOBJPaletteWrite:
 	sla a
 
 	; Set OBJ palette index to a
-	ld de, HW_IO_OBPI
-	set 7, a     ; enable auto-incremting
+	ld de, HW_IO_OCPS
+	set 7, a	; enable auto-incremting
 	ld (de), a
 
-	; increment to get OBPD addr
-	inc de ; ld de, OBPD
+	; increment to get OCPD addr
+	inc de	; ld de, OCPD
 	jr VideoBGPaletteWrite.loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Wait for VRAM to be accessible
-; this includes the hblank
+; Wait for VBlank or HBlank to start
 ;
 ; modifies: hl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-VideoWaitForVRAM:
+VideoWaitForVBlankOrHBlank:
 	ld hl, HW_IO_STAT
 .wait:
 	bit 1, (hl)
 	jr nz, .wait
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Disable Video
+;
+; modifies: a, b
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VideoDisable:
+	; check if already disabled
+	ldh a, (HW_IO_LCDC)
+	bit HW_LCDC_BIT_SCREEN_ENABLE, a
+	ret z
+
+	xor a
+	ldh (HW_IO_IF), a
+	ldh a, (HW_IO_IE)
+	ld b, a
+
+	res HW_IF_BIT_VBLANK, a
+	ldh (HW_IO_IE), a
+
+.wait:
+	ldh a, (HW_IO_LY)
+	cp HW_LY_VBLANK_START + 1
+	jr nz, .wait
+
+	ldh a, (HW_IO_LCDC)
+	res HW_LCDC_BIT_SCREEN_ENABLE, a
+	ldh (HW_IO_LCDC), a
+
+	xor a
+	ldh (HW_IO_IF), a
+	ld a, b
+	ldh (HW_IO_IE), a
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Enable Video
+;
+; modifies: a
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VideoEnable:
+	ldh a, (HW_IO_LCDC)
+	set HW_LCDC_BIT_SCREEN_ENABLE, a
+	ldh (HW_IO_LCDC), a
+	ret
+
+Palette:
+	COLOR $FF, $FF, $FF
+	COLOR $FF, $FF, $FF
+	COLOR $FF, $FF, $FF
+	COLOR $00, $00, $00
+
+Tile:
+	@db %11000011
+	@db %11000011
+	@db %11000011
+	@db %11000011
+	@db %11000011
+	@db %11000011
+	@db %00000000
+	@db %00000000
+	@db %00000000
+	@db %00000000
+	@db %00000000
+	@db %00000000
+	@db %11000011
+	@db %11000011
+	@db %11111111
+	@db %11111111
+@defn .len, @here - Tile
+
+@defl VIDEO_BG_TILE_DATA_BASE, $8800
+@defl VIDEO_BG_TILE_MAP_BASE, $9800
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Initialize Video settings
+;
+; modifies: a, bc, de, hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VideoInit:
+	; Enable 8x16 sprites
+	; Set BG tile data base to $8800
+	; Set BG map to $9800
+	ldh a, (HW_IO_LCDC)
+	or +(1 << HW_LCDC_BIT_OBJ_SIZE)	\
+		| (1 << HW_LCDC_BIT_OBJ_ENABLE)
+	and $FF \
+		& ~((1 << HW_LCDC_BIT_TILE_DATA) \
+		| (1 << HW_LCDC_BIT_BG_TILE_MAP))
+	ldh (HW_IO_LCDC), a
+
+	ld a, 1
+	ld hl, Palette
+	ld c, 1
+	call VideoBGPaletteWrite
+
+	ld de, VIDEO_BG_TILE_DATA_BASE
+	ld hl, Tile
+	ld bc, Tile.len
+	call UtilMemCopy
+
+	ld a, 1
+	ldh (HW_IO_VBK), a
+
+	ld hl, VIDEO_BG_TILE_MAP_BASE
+	ld (hl+), a
+
+	xor a
+	ldh (HW_IO_VBK), a
+
+	ld a, $80
+	ld hl, VIDEO_BG_TILE_MAP_BASE
+	ld (hl+), a
+
 	ret

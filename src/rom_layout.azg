@@ -1,0 +1,74 @@
+@include "hardware.azg"
+@include "stdmacros.azg"
+@include "banking.azg"
+@include "joy.azg"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RAM
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@segment "ADDR"
+@meta "ID" "HRAM"
+@org HW_MMAP_HRAM
+@include "hram.azg"
+@assert @here <= $FFFF, "HRAM overflow!"
+
+@segment "ADDR"
+@meta "ID" "WRAM", "BANK" "00"
+@org HW_MMAP_WRAM0
+@include "wram0.azg"
+@assert @here <= (HW_MMAP_WRAM0_END - $FF), "WRAM0 overflowing into stack!"
+
+@segment "ADDR"
+@meta "ID" "WRAM", "BANK" "01"
+@org HW_MMAP_WRAMX
+@include "wram0.azg"
+@assert @here <= $E000, "WRAM1 overflow!"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ROM00
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@segment "CODE"
+@meta "ID" "ROM", "BANK" "00"
+@org HW_MMAP_ROM0
+
+@include "rom0/interrupts.azg"
+@align $0100
+	nop
+	jp Start
+	HW_ROM_HEADER
+		"Test",
+		HW_ROM_HEADER_CGB_ONLY,
+		HW_ROM_HEADER_MBC5_RAM_BAT,
+		HW_ROM_HEADER_ROM_SIZE_4096KB,
+		HW_ROM_HEADER_SRAM_SIZE_128KB
+
+@include "rom0/start.azg"
+@include "rom0/video.azg"
+@include "rom0/far_call.azg"
+@include "rom0/joy.azg"
+@include "rom0/util.azg"
+@assert @here <= $4000, "ROM00 overflow!"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ROM01
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@segment "CODE"
+@meta "ID" "ROM", "BANK" "01"
+@align $4000
+@org HW_MMAP_ROMX
+jp Start
+@assert @here <= $8000, "ROM01 overflow!"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ROM02
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@segment "CODE"
+@meta "ID" "ROM", "BANK" "02"
+@align $4000
+@org HW_MMAP_ROMX
+jp Start
+@assert @here <= $8000, "ROM02 overflow!"

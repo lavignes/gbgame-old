@@ -1,0 +1,35 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Call function at a:hl
+;
+; modifies: a, de, hl
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FarCallHL:
+	ldh (HRAM.Scratch+0), a
+	ldh a, (HRAM.ROMBank)
+	push af
+	ldh a, (HRAM.Scratch+0)
+	rst ROMBankSwitch
+
+	call .trampoline
+.return:
+	; The return address from the farcall is on the stack.
+	; We however want to retain any flags set in the farcall.
+	; To do this we need to not pop into af. So we use de
+	ld a, d
+	ldh (HRAM.Scratch+0), a
+	ld a, e
+	ldh (HRAM.Scratch+1), a
+
+	pop de			; d contains the return bank
+	ld a, d
+	rst ROMBankSwitch
+
+	ldh a, (HRAM.Scratch+0)
+	ld d, a
+	ldh a, (HRAM.Scratch+1)
+	ld e, a
+	ret
+
+.trampoline:
+	jp hl

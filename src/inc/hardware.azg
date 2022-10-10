@@ -4,103 +4,173 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ROM Header Stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-@defn HW_ROM_HEADER.CGB_ONLY, $C0
+@defn HW_ROM_HEADER_CGB_ONLY, $C0
 
-@defn HW_ROM_HEADER.MBC5_RAM_BAT, $1B
+@defn HW_ROM_HEADER_MBC5_RAM_BAT, $1B
 
-@defn HW_ROM_HEADER.ROM_SIZE_8192KB, $08
+@defn HW_ROM_HEADER_ROM_SIZE_4096KB, $07
 
-@defn HW_ROM_HEADER.SRAM_SIZE_128KB, $04
+@defn HW_ROM_HEADER_SRAM_SIZE_128KB, $04
 
-@macro HW_ROM_HEADER, 5
+@macro HW_ROM_HEADER, 5, Title, Compat, CartType, ROMSize, SRAMSize
 	; tendy logo
-	@db $CE, $ED, $66, $66, $CC, $0D, $00, $0B		
+	@db $CE, $ED, $66, $66, $CC, $0D, $00, $0B
 	@db $03, $73, $00, $83, $00, $0C, $00, $0D
 	@db $00, $08, $11, $1F, $88, $89, $00, $0E
 	@db $DC, $CC, $6E, $E6, $DD, $DD, $D9, $99
 	@db $BB, $BB, $67, $63, $6E, $0E, $EC, $CC
 	@db $DD, $DC, $99, $9F, $BB, $B9, $33, $3E
-	
-	@db @1
+
+	@db Title
 
 	; Manufacturer code
 	@align $013F
 	@assert @here == $013F, "Title is too long!"
 	@db "AZGB"
-	
-	@db @2		; Gameboy compatibility
+
+	@db Compat	; Gameboy compatibility
 	@dw $0000	; License code 0
 	@db $00		; No super gameboy
-	@db @3		; Cart type
-	@db @4		; ROM size
-	@db @5		; SRAM size
+	@db CartType	; Cart type
+	@db ROMSize	; ROM size
+	@db SRAMSize	; SRAM size
 	@db $01		; Non-JP
 	@db $00		; Old-style licensee code
 	@db $00		; ROM version
 	@db $00		; Header checksum
-	@dw $0000	; ROM checksum	
+	@dw $0000	; ROM checksum
 @endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Memory Map Locations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @defl HW_MMAP_ROM0,		$0000
-@defl HW_MMAP_ROM0_END,		$4000
+@defl HW_MMAP_ROM0_END,		$4000-1
 
 @defl HW_MMAP_ROMX,		$4000
-@defl HW_MMAP_ROMX_END,		$8000
+@defl HW_MMAP_ROMX_END,		$8000-1
 
 @defl HW_MMAP_VRAM,		$8000
-@defl HW_MMAP_VRAM_END,		$A000
+@defl HW_MMAP_VRAM_END,		$A000-1
 
 @defl HW_MMAP_SRAM,		$A000
-@defl HW_MMAP_SRAM_END,		$C000
+@defl HW_MMAP_SRAM_END,		$C000-1
 
 @defl HW_MMAP_WRAM0,		$C000
-@defl HW_MMAP_WRAM0_END,	$D000
+@defl HW_MMAP_WRAM0_END,	$D000-1
 @defl HW_MMAP_WRAMX,		$D000
-@defl HW_MMAP_WRAMX_END,	$E000
+@defl HW_MMAP_WRAMX_END,	$E000-1
 
 @defl HW_MMAP_OAM,		$FE00
-@defl HW_MMAP_OAM_END,		$FEA0
+@defl HW_MMAP_OAM_END,		$FEA0-1
 
 @defl HW_MMAP_HRAM,		$FF80
 @defl HW_MMAP_HRAM_END,		$FFFF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Cart Ports
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@defl HW_MBC5_ROM_BANK_LO,	$2000
+@defl HW_MBC5_ROM_BANK_HI,	$3000
+@defl HW_MBC5_RAM_BANK,		$4000
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; IO Ports
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+@defl HW_IO_P1,		$FF00
+@defl HW_IO_SB,		$FF01
+@defl HW_IO_SC,		$FF02
+@defl HW_IO_DIV,	$FF03
+@defl HW_IO_TIMA,	$FF04
+@defl HW_IO_TMA,	$FF05
+@defl HW_IO_TAC,	$FF06
+
 @defl HW_IO_KEY1,	$FF4D
+@defl HW_IO_RP,		$FF56
+
+@defl HW_IO_VBK,	$FF4F
+@defl HW_IO_SVBK,	$FF70
 
 @defl HW_IO_IF,		$FF0F
 @defl HW_IO_IE,		$FFFF
 
-@defl HW_IO_JOYP,	$FF00
-
-@defl HW_IO_BGPI,	$FF68
-@defl HW_IO_BGPD,	$FF69
-
-@defl HW_IO_OBPI,	$FF6A
-@defl HW_IO_OBPD,	$FF6B
-
+@defl HW_IO_LCDC,	$FF40
 @defl HW_IO_STAT,	$FF41
+@defl HW_IO_SCY,	$FF42
+@defl HW_IO_SCX,	$FF43
+@defl HW_IO_LY,		$FF44
+@defl HW_IO_LYC,	$FF45
+@defl HW_IO_DMA,	$FF46
+
+; Background and Object palettes (non-color)
+@defl HW_IO_BGP,	$FF47
+@defl HW_IO_OBP0,	$FF48
+@defl HW_IO_OBP1,	$FF49
+@defl HW_IO_WY,		$FF4A
+@defl HW_IO_WX,		$FF4B
+
+@defl HW_IO_HDMA1,	$FF51
+@defl HW_IO_HDMA2,	$FF52
+@defl HW_IO_HDMA3,	$FF53
+@defl HW_IO_HDMA4,	$FF54
+@defl HW_IO_HDMA5,	$FF55
+
+; Background Color Palette Index/Data
+@defl HW_IO_BCPS,	$FF68
+@defl HW_IO_BCPD,	$FF69
+
+; Object Color Palette Index/Data
+@defl HW_IO_OCPS,	$FF6A
+@defl HW_IO_OCPD,	$FF6B
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Interrupt Flags
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@defn HW_IF_BIT_VBLANK,		0
+@defn HW_IF_BIT_LCD_STAT,	1
+@defn HW_IF_BIT_TIMER,		2
+@defn HW_IF_BIT_SERIAL,		3
+@defn HW_IF_BIT_JOYP,		4
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video Stuff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+@defn HW_LY_VBLANK_START, 144
+
+@defn HW_STAT_BIT_LYC_ENABLE,		6
+@defn HW_STAT_BIT_OAM_ENABLE,		5
+@defn HW_STAT_BIT_VBLANK_ENABLE,	4
+@defn HW_STAT_BIT_HBLANK_ENABLE,	3
+@defn HW_STAT_BIT_LYC_EQ_LY,		2
+@defn HW_STAT_MASK_MODE,		3
+
+@defn HW_LCDC_BIT_SCREEN_ENABLE,	7
+@defn HW_LCDC_BIT_WIN_TILE_MAP,		6
+@defn HW_LCDC_BIT_WIN_ENABLE,		5
+@defn HW_LCDC_BIT_TILE_DATA,		4
+@defn HW_LCDC_BIT_BG_TILE_MAP,		3
+@defn HW_LCDC_BIT_OBJ_SIZE,		2
+@defn HW_LCDC_BIT_OBJ_ENABLE,		1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Joypad Stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-@defn HW_JOYP_GET_ACTION,	%00100000
-@defn HW_JOYP_GET_DIRECTION,	%00010000
+@defn HW_P1_BIT_GET_ACTION,	5
+@defn HW_P1_BIT_GET_DIRECTION,	4
 
-@defn HW_JOYP_RIGHT,	%00000001
-@defn HW_JOYP_LEFT,	%00000010
-@defn HW_JOYP_UP,	%00000100
-@defn HW_JOYP_DOWN,	%00001000
+@defn HW_P1_BIT_RIGHT,	0
+@defn HW_P1_BIT_LEFT,	1
+@defn HW_P1_BIT_UP,	2
+@defn HW_P1_BIT_DOWN,	3
 
-@defn HW_JOYP_A,	%00000001
-@defn HW_JOYP_B,	%00000010
-@defn HW_JOYP_SELECT,	%00000100
-@defn HW_JOYP_START,	%00001000
+@defn HW_P1_BIT_A,	0
+@defn HW_P1_BIT_B,	1
+@defn HW_P1_BIT_SELECT,	2
+@defn HW_P1_BIT_START,	3
 
 @endif ; HW_INC

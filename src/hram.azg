@@ -1,3 +1,9 @@
 HRAM:
-.ROMBankLo: @db
-.ROMBankHi: @db
+.ROMBank: @db
+
+.JoyPressed: @db
+.JoyHeld: @db
+.JoyReleased: @db
+
+; Generic scratch locations
+.Scratch: @ds 4

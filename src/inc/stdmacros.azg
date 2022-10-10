@@ -1,0 +1,33 @@
+@if ! @isdef STDMACROS_INC
+@defn STDMACROS_INC, 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Define a color word in the palette format (BGR555 little-endian)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+@macro COLOR, 3, Red, Green, Blue
+	; Basically just drop the bottom 3 bits of each color channel
+	@db $FF & ((((Green) & $F8) <<< 2) | (((Red) & $F8) >>> 3))
+	@db $FF & ((((Blue) & $F8) >>> 1) | (((Green) & $F8) >>> 6))
+@endmacro
+
+@macro REPEAT, 2, N, Body
+	@each _, { @count N }
+		Body
+	@endeach
+@endmacro
+
+@macro MEMCPY, 4, Name, Dst, Src, Len
+	ld de, Dst
+	ld hl, Src
+	ld bc, Len
+@label { Name _memcopy }
+	ld a, (hl+)
+	ld (de), a
+	inc de
+	dec bc
+	ld a, b
+	or c
+	jr nz, @label { Name _memcopy }
+@endmacro
+
+@endif ; STDMACROS_INC

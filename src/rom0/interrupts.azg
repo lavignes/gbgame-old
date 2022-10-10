@@ -1,12 +1,15 @@
+@assert @here == $0000
 Rst00:
 	jp Start
 
 @align $0008
-Rst08:
-	ret
+FarCall:
+	jp FarCallHL
 
 @align $0010
-Rst10:
+ROMBankSwitch:
+	ldh (HRAM.ROMBank), a
+	ld (HW_MBC5_ROM_BANK_LO), a
 	ret
 
 @align $0018
@@ -31,6 +34,7 @@ Rst38:
 
 @align $0040
 InterruptVBlank:
+	call MainLoop
 	reti
 
 @align $0048

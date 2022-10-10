@@ -1,0 +1,33 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Copy bc bytes from hl to de
+;
+; modifies: a, bc, de, hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UtilMemCopy:
+	ld a, b
+	or c
+	jr z, .done
+	ld a, (hl+)
+	ld (de), a
+	inc de
+	dec bc
+	jr UtilMemCopy
+.done:
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Set bc bytes at hl to a
+;
+; modifies: a, bc, d, hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UtilMemSet:
+	ld d, a
+	ld a, b
+	or c
+	jr z, .done
+	ld a, d
+	ld (hl+), a
+	dec bc
+	jr UtilMemSet
+.done:
+	ret

@@ -1,0 +1,56 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Update the state of the joypad
+;
+; modifies: a, bc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+JoyUpdate:
+	ld a, HW_P1_BIT_GET_DIRECTION
+	ldh (HW_IO_P1), a
+	ldh a, (HW_IO_P1)
+	ldh a, (HW_IO_P1)
+
+	; Store direction bits in upper nibble of b
+	cpl
+	and $0F
+	swap a
+	ld b, a
+
+	ld a, HW_P1_BIT_GET_ACTION
+	ldh (HW_IO_P1), a
+	ldh a, (HW_IO_P1)
+	ldh a, (HW_IO_P1)
+	ldh a, (HW_IO_P1)
+	ldh a, (HW_IO_P1)
+	ldh a, (HW_IO_P1)
+	ldh a, (HW_IO_P1)
+
+	; Store everything in b
+	cpl
+	and $0F
+	or b
+	ld b, a
+
+	; done reading
+	ld a, HW_P1_BIT_GET_ACTION | HW_P1_BIT_GET_DIRECTION
+	ldh (HW_IO_P1), a
+
+	; Now we have the button states for this frame in b
+	; AND with JoyPressed to get the held buttons
+	ldh a, (HRAM.JoyPressed)
+	and b
+	ldh (HRAM.JoyHeld), a
+
+	; AND with complement to find released states
+	ld a, b
+	cpl
+	ld c, a
+	ldh a, (HRAM.JoyPressed)
+	and c
+	ldh (HRAM.JoyReleased), a
+
+	; Finally, update the state for the next frame
+	; XOR so held buttons dont register
+	ld a, (HRAM.JoyPressed)
+	xor b
+	ldh (HRAM.JoyPressed), a
+	ret

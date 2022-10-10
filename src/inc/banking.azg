@@ -1,0 +1,20 @@
+@if ! @isdef BANKING_INC
+@defn BANKING_INC, 1
+
+@macro BANKOF, 1, Label
+	@parse @string { "$" @getmeta Label, "BANK" "\\" }
+@endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Perform a FarCall to a given label
+;
+; modifies: a, hl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+@macro FARCALL, 1, Label
+	@assert BANKOF Label != 0, @string { "\"" Label "\" is in bank $00!" }
+	ld a, BANKOF Label
+	ld hl, Label
+	rst FarCall
+@endmacro
+
+@endif ; BANKING_INC
