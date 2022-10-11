@@ -1,0 +1,5 @@
+WRAM0:
+
+; Flag to track whether a vblank interrupt was triggered
+; while halting in the main loop. Set by vblank interrupt.
+.VBlankTripped: @db

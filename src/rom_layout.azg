@@ -22,7 +22,7 @@
 @segment "ADDR"
 @meta "ID" "WRAM", "BANK" "01"
 @org HW_MMAP_WRAMX
-@include "wram0.azg"
+@include "wram1.azg"
 @assert @here <= $E000, "WRAM1 overflow!"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

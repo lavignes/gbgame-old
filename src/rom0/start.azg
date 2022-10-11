@@ -1,4 +1,4 @@
-DoubleSpeedMode:
+StartDoubleSpeedMode:
 	; Return if already double speed
 	ld hl, HW_IO_KEY1
 	bit 7, (hl)
@@ -16,7 +16,7 @@ DoubleSpeedMode:
 	stop
 	ret
 
-RAMInit:
+StartRAMInit:
 	xor a
 	ldh (HRAM.JoyPressed), a
 	ldh (HRAM.JoyHeld), a
@@ -36,13 +36,27 @@ RAMInit:
 
 	ret
 
+StartWaitVBlank:
+	xor a
+	di
+	ld (WRAM0.VBlankTripped), a
+.loop:
+	ei
+	halt
+	di
+	ld a, (WRAM0.VBlankTripped)
+	and a
+	jr z, .loop
+	ei
+	ret
+
 Start:
 	di
 	; Put stack top at end of WRAM0
 	ld sp, HW_MMAP_WRAM0_END+1
-	call RAMInit
+	call StartRAMInit
 	call VideoDisable
-	call DoubleSpeedMode
+	call StartDoubleSpeedMode
 
 	ld a, 1
 	rst ROMBankSwitch
@@ -55,14 +69,9 @@ Start:
 	ldh (HW_IO_IE), a
 	ei
 
-	; Finally we sleep the main thread, running
-	; everything in vblank
-.sleep
-	halt
-	nop
-	jr .sleep
+StartMainLoop:
+	call StartWaitVBlank
 
-MainLoop:
 	; All critical video stuff should happen here
 	; * update OAM
 	; * update tiles
@@ -108,5 +117,5 @@ MainLoop:
 	ldh (HW_IO_SCY), a
 
 .exit:
-	ret
+	jp StartMainLoop
 

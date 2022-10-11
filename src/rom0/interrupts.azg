@@ -34,7 +34,10 @@ Rst38:
 
 @align $0040
 InterruptVBlank:
-	call MainLoop
+	push hl
+	ld hl, WRAM0.VBlankTripped
+	ld (hl), 1
+	pop hl
 	reti
 
 @align $0048
