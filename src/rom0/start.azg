@@ -23,16 +23,23 @@ StartRAMInit:
 	ldh (HRAM.JoyReleased), a
 
 	; erase wram0
-	ld a, 'i'
+	xor a
 	ld hl, HW_MMAP_WRAM0
 	ld bc, $1000-$100 ; dont touch stack
 	call UtilMemSet
 
-	; erase wram1
-	ld a, 'i'
+	; erase wram1-7
+	ld b, 7
+.wipe_ramx:
+	ld a, b
+	ldh (HW_IO_SVBK), a
+	push bc
 	ld hl, HW_MMAP_WRAMX
 	ld bc, $1000
 	call UtilMemSet
+	pop bc
+	dec b
+	jr nz, .wipe_ramx
 
 	ret
 
@@ -59,7 +66,7 @@ Start:
 	call StartDoubleSpeedMode
 
 	ld a, 1
-	rst ROMBankSwitch
+	rst RstROMBankSwitch
 
 	call VideoInit
 	call VideoEnable

@@ -13,9 +13,9 @@ VideoBGPaletteWrite:
 	sla c ; c *= 4
 	sla c
 
-	sla a ; a *= 8
-	sla a
-	sla a
+	add a, a ; a *= 8
+	add a, a
+	add a, a
 
 	; Set BG palette index to a
 	ld de, HW_IO_BCPS
@@ -51,9 +51,9 @@ VideoOBJPaletteWrite:
 	sla c ; c *= 4
 	sla c
 
-	sla a ; a *= 8
-	sla a
-	sla a
+	add a, a ; a *= 8
+	add a, a
+	add a, a
 
 	; Set OBJ palette index to a
 	ld de, HW_IO_OCPS

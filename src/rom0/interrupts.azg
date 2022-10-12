@@ -1,19 +1,28 @@
 @assert @here == $0000
-Rst00:
-	jp Start
-
-@align $0008
-FarCall:
-	jp FarCallHL
+; Jumps to address in table that follows this call
+; modifies a, hl
+RstJumpTable:
+	add a, a	; a = a * 2 (index into table)
+	pop hl		; places return address in hl
+	add a, l
+	ld l, a
+	jr nc, .nocarry
+	inc h
+.nocarry:
+	ld a, (hl+)
+	ld h, (hl)
+	ld l, a
+	jp hl
 
 @align $0010
-ROMBankSwitch:
-	ldh (HRAM.ROMBank), a
-	ld (HW_MBC5_ROM_BANK_LO), a
-	ret
+@assert @here == $0010
+RstFarCall:
+	jp FarCallHL
 
 @align $0018
-Rst18:
+RstROMBankSwitch:
+	ldh (HRAM.ROMBank), a
+	ld (HW_MBC5_ROM_BANK_LO), a
 	ret
 
 @align $0020

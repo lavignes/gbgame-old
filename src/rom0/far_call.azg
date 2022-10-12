@@ -8,7 +8,7 @@ FarCallHL:
 	ldh a, (HRAM.ROMBank)
 	push af
 	ldh a, (HRAM.Scratch+0)
-	rst ROMBankSwitch
+	rst RstROMBankSwitch
 
 	call .trampoline
 .return:
@@ -22,7 +22,7 @@ FarCallHL:
 
 	pop de			; d contains the return bank
 	ld a, d
-	rst ROMBankSwitch
+	rst RstROMBankSwitch
 
 	ldh a, (HRAM.Scratch+0)
 	ld d, a

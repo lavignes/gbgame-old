@@ -14,7 +14,7 @@
 	@assert BANKOF Label != 0, @string { "\"" Label "\" is in bank $00!" }
 	ld a, BANKOF Label
 	ld hl, Label
-	rst FarCall
+	rst RstFarCall
 @endmacro
 
 @endif ; BANKING_INC
